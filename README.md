@@ -43,14 +43,14 @@ Fictional projects should be clearly identified as concepts/demos. The King Leos
 
 ## Live demo links
 
-Each project now has a `demoUrl` in `script.js`.
+The portfolio now includes four deployed live demos:
 
-Example:
-`demoUrl:'https://your-deployed-demo.com'`
+1. Aurelia Premium Design — https://aureliapremium.netlify.app
+2. Interactive Portfolio — https://portfoliodemointeractive.netlify.app
+3. Apex Motors — https://apexmoters.netlify.app
+4. King Leos Fitness — https://kingleosgym.netlify.app
 
-Replace the `#` placeholder with the real deployed URL. The **Live Demo ↗** button in both the project card and case-study modal will open it in a new tab.
-
-Project cards use browser-style mockups so screenshots look like actual websites rather than flat images.
+The **Live Demo ↗** button on each project card and in the case-study modal opens the corresponding deployed site in a new tab.
 
 
 ## V2.1 bug fix
