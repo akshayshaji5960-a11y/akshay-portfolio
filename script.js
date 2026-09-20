@@ -107,3 +107,245 @@ menu?.addEventListener('click',()=>{
 document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('click',()=>{
   if(window.innerWidth<=760){ menu?.click(); }
 }));
+
+
+/* =========================================================
+   V3 — INTERACTIVE MOTION SYSTEM
+   ========================================================= */
+
+(() => {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Scroll progress ---------- */
+  const progress = document.querySelector('.scroll-progress span');
+
+  const updateScrollUI = () => {
+    const doc = document.documentElement;
+    const max = doc.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+    if (progress) progress.style.width = pct + '%';
+
+    // Gentle depth movement for selected elements.
+    if (!reducedMotion) {
+      document.querySelectorAll('.project').forEach(project => {
+        const rect = project.getBoundingClientRect();
+        const center = window.innerHeight * .5;
+        const distance = (rect.top + rect.height * .5) - center;
+        const shift = Math.max(-16, Math.min(16, distance * -0.018));
+        project.style.setProperty('--scroll-shift', shift.toFixed(2) + 'px');
+      });
+    }
+  };
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        updateScrollUI();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, {passive:true});
+  updateScrollUI();
+
+  /* ---------- Hero 3D space particle field ---------- */
+  const canvas = document.getElementById('heroField');
+  const hero = document.querySelector('.hero');
+
+  if (canvas && hero && !reducedMotion) {
+    const ctx = canvas.getContext('2d', {alpha:true});
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+
+    let width = 0, height = 0;
+    let particles = [];
+    let targetX = .5, targetY = .5;
+    let currentX = .5, currentY = .5;
+
+    const rand = (a,b) => a + Math.random() * (b-a);
+
+    function resize() {
+      const rect = hero.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      // Layered stars with individual depth values.
+      const count = Math.min(760, Math.max(360, Math.floor(width * .52)));
+
+      particles = Array.from({length:count}, () => ({
+        x: rand(-1.25,1.25),
+        y: rand(-1.0,1.0),
+        z: rand(.06,1),
+        size: rand(.22,.72),
+        alpha: rand(.18,.72),
+        twinkle: rand(0,Math.PI*2),
+        speed: rand(.00022,.00065),
+        drift: rand(-.00012,.00012)
+      }));
+    }
+
+    function pointerMove(e) {
+      const r = hero.getBoundingClientRect();
+      targetX = Math.max(0, Math.min(1, (e.clientX-r.left)/r.width));
+      targetY = Math.max(0, Math.min(1, (e.clientY-r.top)/r.height));
+      hero.style.setProperty('--mx', (targetX*100)+'%');
+      hero.style.setProperty('--my', (targetY*100)+'%');
+    }
+
+    function draw(time) {
+      currentX += (targetX-currentX) * .035;
+      currentY += (targetY-currentY) * .035;
+
+      ctx.clearRect(0,0,width,height);
+
+      const centerX = width * .50 + (currentX-.5) * -34;
+      const centerY = height * .48 + (currentY-.5) * -22;
+
+      // Almost invisible atmospheric haze behind the stars.
+      const haze = ctx.createRadialGradient(
+        centerX, centerY, 0,
+        centerX, centerY, Math.max(width,height) * .72
+      );
+      haze.addColorStop(0,'rgba(216,255,50,.025)');
+      haze.addColorStop(.42,'rgba(216,255,50,.008)');
+      haze.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = haze;
+      ctx.fillRect(0,0,width,height);
+
+      particles.forEach(p => {
+        // Move stars continuously through 3D depth toward the viewer.
+        p.z -= p.speed;
+        p.x += p.drift;
+        if (p.z < .035) {
+          p.z = 1;
+          p.x = rand(-1.25,1.25);
+          p.y = rand(-1.0,1.0);
+        }
+
+        // Perspective: closer stars become larger and move more.
+        const depth = p.z;
+        const perspective = 1 / (0.28 + depth * 1.35);
+
+        let x = centerX + p.x * width * .47 * perspective;
+        let y = centerY + p.y * height * .70 * perspective;
+
+        // Slow camera drift through the starfield.
+        x += Math.sin(time * .00035 + p.twinkle) * (1.2 + (1-depth)*4);
+        y += Math.cos(time * .00028 + p.twinkle) * (1.0 + (1-depth)*3);
+
+        // Cursor = subtle camera parallax, not a rotating ring.
+        x += (currentX-.5) * depth * 70;
+        y += (currentY-.5) * depth * 45;
+
+        // Wrap stars around the viewport.
+        if (x < -30) { x += width + 60; p.x += .12; }
+        if (x > width+30) { x -= width + 60; p.x -= .12; }
+        if (y < -30) { y += height + 60; p.y += .10; }
+        if (y > height+30) { y -= height + 60; p.y -= .10; }
+
+        const near = 1 - depth;
+        const radius = p.size * (0.65 + near * 2.5);
+        const twinkle = .78 + Math.sin(time*.0017 + p.twinkle) * .22;
+        const alpha = Math.min(.9, p.alpha * (.38 + near*.9) * twinkle);
+
+        // Mostly cool-white stars, with a restrained portfolio-green tint.
+        const tint = p.size > 1.05 ? '216,255,50' : '225,229,222';
+        ctx.fillStyle = `rgba(${tint},${alpha})`;
+        ctx.beginPath();
+        ctx.arc(x,y,Math.max(.3,radius),0,Math.PI*2);
+        ctx.fill();
+
+        // A few foreground stars get a tiny atmospheric glow.
+        if (near > .72 && p.size > .58) {
+          const glowRadius = radius * 5;
+          const g = ctx.createRadialGradient(x,y,0,x,y,glowRadius);
+          g.addColorStop(0,`rgba(216,255,50,${alpha*.16})`);
+          g.addColorStop(1,'rgba(216,255,50,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x,y,glowRadius,0,Math.PI*2);
+          ctx.fill();
+        }
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    hero.addEventListener('pointermove', pointerMove, {passive:true});
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(draw);
+  }
+
+  /* ---------- Project tilt + parallax ---------- */
+  if (!reducedMotion) {
+    document.querySelectorAll('.project').forEach(project => {
+      const shell = project.querySelector('.browser-shell');
+      const screen = project.querySelector('.browser-screen');
+      if (!shell) return;
+
+      project.addEventListener('pointermove', e => {
+        const r = project.getBoundingClientRect();
+        const x = (e.clientX-r.left)/r.width - .5;
+        const y = (e.clientY-r.top)/r.height - .5;
+
+        const rotateY = x * 3.2;
+        const rotateX = y * -2.4;
+        shell.style.transform =
+          `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(var(--scroll-shift,0px))`;
+
+        if (screen) {
+          project.style.setProperty('--px', ((x+.5)*100)+'%');
+          project.style.setProperty('--py', ((y+.5)*100)+'%');
+          const img = screen.querySelector('img');
+          if (img) img.style.transform =
+            `scale(1.035) translate(${x*-8}px,${y*-6}px)`;
+        }
+      });
+
+      project.addEventListener('pointerleave', () => {
+        shell.style.transform = '';
+        const img = screen?.querySelector('img');
+        if (img) img.style.transform = '';
+      });
+    });
+  }
+
+  /* ---------- Smooth anchor scrolling ---------- */
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const id = link.getAttribute('href');
+      if (!id || id === '#') return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    });
+  });
+
+  /* ---------- Active navigation based on section ---------- */
+  const navLinks = [...document.querySelectorAll('.nav-center a')];
+  const sections = [...document.querySelectorAll('[data-section]')];
+
+  if (navLinks.length && sections.length) {
+    const sectionObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach(link => {
+          const active = link.getAttribute('href') === '#' + entry.target.id;
+          link.style.color = active ? 'var(--acid)' : '';
+        });
+      });
+    }, {rootMargin:'-35% 0px -55% 0px', threshold:0});
+    sections.forEach(section => sectionObserver.observe(section));
+  }
+})();

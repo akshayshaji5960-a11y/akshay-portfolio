@@ -71,3 +71,19 @@ The large ↗ arrow in the contact section is a mail link. Replace `hello@yourdo
 1. Replace each `demoUrl: '#'` in `script.js` with the real URL of the corresponding deployed demo site.
 2. Keep the contact details in `index.html` as your primary client contact links.
 3. Upload the whole `akshay-portfolio` folder with `index.html` at the project root.
+
+
+## V3 interactive motion upgrade
+
+Added without external animation libraries:
+- Interactive wire/particle field in the hero, inspired by the supplied reference.
+- Pointer-reactive ambient glow.
+- Scroll progress indicator.
+- Stronger scroll reveal choreography with blur/depth.
+- Project-card 3D tilt and image parallax.
+- Cursor-position spotlight over project previews.
+- Active navigation highlighting while scrolling.
+- Smoother anchor scrolling.
+- Reduced-motion accessibility support.
+
+The existing portfolio content, project modal, live-demo buttons, mobile navigation, and contact links are preserved.

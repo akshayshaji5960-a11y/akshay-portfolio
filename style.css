@@ -136,3 +136,206 @@ img{display:block;width:100%}
 .site-footer a{color:#aaa;text-decoration:none}
 .site-footer a:hover{color:#fff}
 @media(max-width:760px){.contact-links{gap:12px 20px}.site-footer{flex-direction:column;gap:12px;padding:24px 5vw}}
+
+
+/* =========================================================
+   V3 — INTERACTIVE MOTION SYSTEM
+   Lightweight canvas + scroll choreography, no libraries.
+   ========================================================= */
+
+:root{
+  --motion-ease:cubic-bezier(.16,1,.3,1);
+}
+
+html{scroll-behavior:auto}
+
+/* Thin page progress indicator */
+.scroll-progress{
+  position:fixed;
+  z-index:210;
+  top:0;
+  left:0;
+  width:100%;
+  height:2px;
+  background:transparent;
+  pointer-events:none;
+}
+.scroll-progress span{
+  display:block;
+  width:0%;
+  height:100%;
+  background:var(--acid);
+  box-shadow:0 0 14px rgba(216,255,50,.55);
+  transform-origin:left center;
+}
+
+/* Interactive wire/particle field inspired by the supplied reference */
+.hero-field{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+  pointer-events:none;
+  opacity:.92;
+  mix-blend-mode:screen;
+}
+.hero{
+  isolation:isolate;
+}
+.hero-grid,
+.hero-bottom{z-index:3}
+
+/* Ambient light that follows the pointer */
+.hero::after{
+  content:"";
+  position:absolute;
+  width:520px;
+  height:520px;
+  left:var(--mx,50%);
+  top:var(--my,45%);
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(216,255,50,.075),transparent 68%);
+  filter:blur(20px);
+  pointer-events:none;
+  z-index:1;
+  transition:left .5s var(--motion-ease),top .5s var(--motion-ease);
+}
+
+/* Scroll-driven section depth */
+.scroll-section{
+  position:relative;
+  overflow:hidden;
+}
+.scroll-section::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,#333 20%,#333 80%,transparent);
+  opacity:.7;
+}
+
+/* Make reveals feel more like a sequence rather than simple fade-ins */
+.reveal{
+  opacity:0;
+  transform:translate3d(0,45px,0) scale(.985);
+  filter:blur(4px);
+  transition:
+    opacity 1s var(--motion-ease),
+    transform 1s var(--motion-ease),
+    filter 1s var(--motion-ease);
+}
+.reveal.visible{
+  opacity:1;
+  transform:none;
+  filter:none;
+}
+.reveal:nth-child(2){transition-delay:.06s}
+.reveal:nth-child(3){transition-delay:.12s}
+.reveal:nth-child(4){transition-delay:.18s}
+
+/* Hero headline gets a little more life */
+.hero-title{
+  perspective:900px;
+  text-shadow:0 0 0 transparent;
+  transition:transform .25s ease-out;
+}
+.hero-title em,
+.hero-title span{
+  transition:color .5s ease,text-shadow .5s ease;
+}
+.hero:hover .hero-title em{
+  text-shadow:0 0 35px rgba(216,255,50,.12);
+}
+
+/* Project image depth + cursor spotlight */
+.project{
+  --px:50%;
+  --py:50%;
+}
+.browser-shell{
+  transform-style:preserve-3d;
+  will-change:transform;
+}
+.browser-screen::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  background:radial-gradient(circle at var(--px) var(--py),rgba(255,255,255,.13),transparent 24%);
+  transition:opacity .35s ease;
+  z-index:4;
+}
+.project:hover .browser-screen::after{opacity:1}
+.browser-screen>img{
+  will-change:transform;
+}
+
+/* More tactile service rows */
+.service{
+  position:relative;
+  overflow:hidden;
+}
+.service::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  transform:translateX(-101%);
+  background:linear-gradient(90deg,rgba(216,255,50,.055),transparent 65%);
+  transition:transform .7s var(--motion-ease);
+  pointer-events:none;
+}
+.service:hover::before{transform:translateX(0)}
+.service > *{position:relative;z-index:1}
+
+/* Tags subtly respond to scrolling/hover */
+.stack span,.about-tags span{
+  transition:transform .3s var(--motion-ease),border-color .3s ease,color .3s ease;
+}
+.stack span:hover,.about-tags span:hover{
+  transform:translateY(-4px);
+  border-color:#666;
+  color:#fff;
+}
+
+/* Contact section gets a huge atmospheric glow */
+.contact{
+  isolation:isolate;
+}
+.contact::before{
+  content:"";
+  position:absolute;
+  width:70vw;
+  height:70vw;
+  max-width:900px;
+  max-height:900px;
+  right:-30vw;
+  bottom:-45vw;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(216,255,50,.055),transparent 68%);
+  pointer-events:none;
+  z-index:-1;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .hero-field{display:none}
+  .reveal{opacity:1;transform:none;filter:none}
+}
+
+/* Mobile: keep the canvas elegant and low-cost */
+@media(max-width:760px){
+  .hero-field{opacity:.5}
+  .hero::after{width:300px;height:300px}
+  .scroll-progress{height:1px}
+}

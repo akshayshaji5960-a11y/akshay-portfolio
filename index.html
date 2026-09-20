@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+  <canvas class="hero-field" id="heroField" aria-hidden="true"></canvas>
   <div class="noise"></div>
   <div class="cursor-dot"></div>
   <div class="cursor-ring"></div>
@@ -66,7 +68,7 @@
       </div>
     </section>
 
-    <section class="manifesto">
+    <section class="manifesto scroll-section" data-section="manifesto">
       <div class="container">
         <p class="section-label reveal">01 — THE APPROACH</p>
         <h2 class="manifesto-text reveal">
@@ -83,7 +85,7 @@
       </div>
     </section>
 
-    <section class="work" id="work">
+    <section class="work scroll-section" id="work" data-section="work">
       <div class="container">
         <div class="work-head">
           <p class="section-label reveal">02 — SELECTED WORK</p>
@@ -182,7 +184,7 @@
       </div>
     </section>
 
-    <section class="services" id="services">
+    <section class="services scroll-section" id="services" data-section="services">
       <div class="container">
         <p class="section-label reveal">03 — WHAT I DO</p>
         <div class="services-grid">
@@ -200,7 +202,7 @@
       </div>
     </section>
 
-    <section class="about" id="about">
+    <section class="about scroll-section" id="about" data-section="about">
       <div class="container about-grid">
         <div>
           <p class="section-label reveal">04 — A LITTLE ABOUT ME</p>
@@ -214,7 +216,7 @@
       </div>
     </section>
 
-    <section class="contact" id="contact">
+    <section class="contact scroll-section" id="contact" data-section="contact">
       <div class="container">
         <p class="section-label reveal">05 — HAVE A PROJECT?</p>
         <div class="contact-title reveal">
