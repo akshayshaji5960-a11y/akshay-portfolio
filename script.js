@@ -41,9 +41,10 @@ document.querySelectorAll('.magnetic').forEach(el=>{
 });
 
 const projects={
- king:{label:'01 — WEBSITE REDESIGN CONCEPT',title:'King Leos Fitness',text:'A visual redesign direction for a fitness center, combining bold typography, dark editorial layouts, gold accents and conversion-focused calls to action. This is a concept project created to demonstrate design and front-end execution.',image:'assets/king-leos-concept.jpg',demoUrl:'#',tags:['UI/UX','WEB DESIGN','FRONT-END','RESPONSIVE']},
- nova:{label:'02 — E-COMMERCE CONCEPT',title:'NOVA',text:'A fictional fashion storefront concept focused on product presentation, whitespace and a clean shopping journey. Built as a portfolio demonstration of e-commerce UI/UX and art direction.',image:'',demoUrl:'#',tags:['E-COMMERCE','UI/UX','ART DIRECTION']},
- forma:{label:'03 — BRAND + WEB CONCEPT',title:'FORMA',text:'A fictional interior studio identity and website direction built around editorial typography, architecture and restrained visual composition.',image:'',demoUrl:'#',tags:['BRANDING','WEB DESIGN','UI/UX']}
+ aurelia:{label:'01 — PREMIUM DESIGN EXPERIENCE',title:'Aurelia Premium Design',text:'A polished premium web experience focused on visual direction, refined typography, immersive presentation and interactive front-end execution.',image:'',demoUrl:'https://aureliapremium.netlify.app',tags:['WEB DESIGN','UI/UX','INTERACTION','RESPONSIVE']},
+ interactive:{label:'02 — INTERACTIVE PORTFOLIO',title:'Interactive Portfolio',text:'An experimental interactive portfolio experience built around motion, particles, depth and responsive visual interactions.',image:'',demoUrl:'https://portfoliodemointeractive.netlify.app',tags:['INTERACTION','MOTION','3D','FRONT-END']},
+ apex:{label:'03 — AUTOMOTIVE EXPERIENCE',title:'Apex Motors',text:'A premium automotive website concept focused on cinematic presentation, performance-driven art direction and immersive motion.',image:'',demoUrl:'https://apexmoters.netlify.app',tags:['AUTOMOTIVE','WEB DESIGN','MOTION','UI/UX']},
+ king:{label:'04 — FITNESS WEBSITE REDESIGN',title:'King Leos Fitness',text:'A visual redesign direction for a fitness center, combining bold typography, dark editorial layouts, gold accents and conversion-focused calls to action.',image:'assets/king-leos-concept.jpg',demoUrl:'https://kingleosgym.netlify.app',tags:['UI/UX','WEB DESIGN','FRONT-END','RESPONSIVE']}
 };
 
 const modal=document.getElementById('modal');
@@ -149,7 +150,7 @@ document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('
   }, {passive:true});
   updateScrollUI();
 
-  /* ---------- Hero 3D space particle field ---------- */
+  /* ---------- Hero interactive particle field ---------- */
   const canvas = document.getElementById('heroField');
   const hero = document.querySelector('.hero');
 
@@ -161,6 +162,7 @@ document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('
     let particles = [];
     let targetX = .5, targetY = .5;
     let currentX = .5, currentY = .5;
+    let scrollOffset = 0;
 
     const rand = (a,b) => a + Math.random() * (b-a);
 
@@ -168,26 +170,26 @@ document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('
       const rect = hero.getBoundingClientRect();
       width = rect.width;
       height = rect.height;
-
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = width + 'px';
       canvas.style.height = height + 'px';
       ctx.setTransform(dpr,0,0,dpr,0,0);
 
-      // Layered stars with individual depth values.
-      const count = Math.min(760, Math.max(360, Math.floor(width * .52)));
-
-      particles = Array.from({length:count}, () => ({
-        x: rand(-1.25,1.25),
-        y: rand(-1.0,1.0),
-        z: rand(.06,1),
-        size: rand(.22,.72),
-        alpha: rand(.18,.72),
-        twinkle: rand(0,Math.PI*2),
-        speed: rand(.00022,.00065),
-        drift: rand(-.00012,.00012)
-      }));
+      const count = Math.min(560, Math.max(220, Math.floor(width * .38)));
+      particles = Array.from({length:count}, (_,i) => {
+        const angle = (i / count) * Math.PI * 2;
+        const ring = Math.sqrt(Math.random());
+        return {
+          angle,
+          radius: ring,
+          phase: Math.random() * Math.PI * 2,
+          speed: rand(.0007,.0017),
+          wobble: rand(2,11),
+          size: rand(.45,1.25),
+          alpha: rand(.16,.58)
+        };
+      });
     }
 
     function pointerMove(e) {
@@ -199,78 +201,52 @@ document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('
     }
 
     function draw(time) {
-      currentX += (targetX-currentX) * .035;
-      currentY += (targetY-currentY) * .035;
+      currentX += (targetX-currentX) * .045;
+      currentY += (targetY-currentY) * .045;
+
+      const cx = width * .72 + (currentX-.5) * 80;
+      const cy = height * .50 + (currentY-.5) * 55;
+      const baseR = Math.min(width,height) * .30;
+      const verticalR = baseR * .78;
 
       ctx.clearRect(0,0,width,height);
 
-      const centerX = width * .50 + (currentX-.5) * -34;
-      const centerY = height * .48 + (currentY-.5) * -22;
+      // soft halo
+      const glow = ctx.createRadialGradient(cx,cy,baseR*.55,cx,cy,baseR*1.35);
+      glow.addColorStop(0,'rgba(216,255,50,.035)');
+      glow.addColorStop(1,'rgba(216,255,50,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx,cy,baseR*1.35,0,Math.PI*2);
+      ctx.fill();
 
-      // Almost invisible atmospheric haze behind the stars.
-      const haze = ctx.createRadialGradient(
-        centerX, centerY, 0,
-        centerX, centerY, Math.max(width,height) * .72
-      );
-      haze.addColorStop(0,'rgba(216,255,50,.025)');
-      haze.addColorStop(.42,'rgba(216,255,50,.008)');
-      haze.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle = haze;
-      ctx.fillRect(0,0,width,height);
+      // latitude-like flowing particles
+      particles.forEach((p,i) => {
+        const a = p.angle + time*p.speed + Math.sin(time*.0005+p.phase)*.025;
+        const radial = baseR * (0.72 + p.radius*.42);
+        const wave = Math.sin(a*7 + time*.0015 + p.phase) * p.wobble;
+        const x = cx + Math.cos(a) * (radial + wave) * (0.96 + currentX*.08);
+        const y = cy + Math.sin(a) * (verticalR + wave*.7) * (0.96 + currentY*.06);
 
-      particles.forEach(p => {
-        // Move stars continuously through 3D depth toward the viewer.
-        p.z -= p.speed;
-        p.x += p.drift;
-        if (p.z < .035) {
-          p.z = 1;
-          p.x = rand(-1.25,1.25);
-          p.y = rand(-1.0,1.0);
-        }
+        // hide most particles toward the rear to create depth
+        const depth = (Math.sin(a)+1)/2;
+        const alpha = p.alpha * (.28 + depth*.72);
 
-        // Perspective: closer stars become larger and move more.
-        const depth = p.z;
-        const perspective = 1 / (0.28 + depth * 1.35);
-
-        let x = centerX + p.x * width * .47 * perspective;
-        let y = centerY + p.y * height * .70 * perspective;
-
-        // Slow camera drift through the starfield.
-        x += Math.sin(time * .00035 + p.twinkle) * (1.2 + (1-depth)*4);
-        y += Math.cos(time * .00028 + p.twinkle) * (1.0 + (1-depth)*3);
-
-        // Cursor = subtle camera parallax, not a rotating ring.
-        x += (currentX-.5) * depth * 70;
-        y += (currentY-.5) * depth * 45;
-
-        // Wrap stars around the viewport.
-        if (x < -30) { x += width + 60; p.x += .12; }
-        if (x > width+30) { x -= width + 60; p.x -= .12; }
-        if (y < -30) { y += height + 60; p.y += .10; }
-        if (y > height+30) { y -= height + 60; p.y -= .10; }
-
-        const near = 1 - depth;
-        const radius = p.size * (0.65 + near * 2.5);
-        const twinkle = .78 + Math.sin(time*.0017 + p.twinkle) * .22;
-        const alpha = Math.min(.9, p.alpha * (.38 + near*.9) * twinkle);
-
-        // Mostly cool-white stars, with a restrained portfolio-green tint.
-        const tint = p.size > 1.05 ? '216,255,50' : '225,229,222';
-        ctx.fillStyle = `rgba(${tint},${alpha})`;
+        ctx.fillStyle = `rgba(216,255,50,${alpha})`;
         ctx.beginPath();
-        ctx.arc(x,y,Math.max(.3,radius),0,Math.PI*2);
+        ctx.arc(x,y,p.size,0,Math.PI*2);
         ctx.fill();
 
-        // A few foreground stars get a tiny atmospheric glow.
-        if (near > .72 && p.size > .58) {
-          const glowRadius = radius * 5;
-          const g = ctx.createRadialGradient(x,y,0,x,y,glowRadius);
-          g.addColorStop(0,`rgba(216,255,50,${alpha*.16})`);
-          g.addColorStop(1,'rgba(216,255,50,0)');
-          ctx.fillStyle = g;
+        // occasional connecting filament
+        if (i % 9 === 0) {
+          const nx = cx + Math.cos(a+.035) * (radial + wave);
+          const ny = cy + Math.sin(a+.035) * (verticalR + wave*.7);
+          ctx.strokeStyle = `rgba(216,255,50,${alpha*.18})`;
+          ctx.lineWidth = .5;
           ctx.beginPath();
-          ctx.arc(x,y,glowRadius,0,Math.PI*2);
-          ctx.fill();
+          ctx.moveTo(x,y);
+          ctx.lineTo(nx,ny);
+          ctx.stroke();
         }
       });
 
@@ -279,6 +255,7 @@ document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('
 
     hero.addEventListener('pointermove', pointerMove, {passive:true});
     window.addEventListener('resize', resize);
+    window.addEventListener('scroll', () => { scrollOffset = window.scrollY; }, {passive:true});
     resize();
     requestAnimationFrame(draw);
   }
