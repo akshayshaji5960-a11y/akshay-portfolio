@@ -1,6 +1,24 @@
-window.addEventListener('load',()=>{
-  setTimeout(()=>document.getElementById('loader').classList.add('done'),1350);
-});
+// Keep the intro loader independent from remote fonts, images, and iframe previews.
+// window.load can wait on third-party resources, which could leave the portfolio
+// permanently covered when a preview site is slow or blocks embedding.
+(() => {
+  const dismissLoader = () => {
+    const loader = document.getElementById('loader');
+    if (!loader) return;
+    loader.classList.add('done');
+    document.body.classList.remove('loading');
+  };
+
+  const start = () => setTimeout(dismissLoader, 700);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+
+  // Absolute safety fallback: never let a remote resource keep the site covered.
+  setTimeout(dismissLoader, 2500);
+})();
 
 const observer = new IntersectionObserver(entries=>{
   entries.forEach(e=>{
@@ -42,38 +60,83 @@ document.querySelectorAll('.magnetic').forEach(el=>{
 
 const projects={
  aurelia:{
-   label:'01 — PREMIUM DESIGN CONCEPT',
+   label:'01 — PREMIUM BUSINESS CONCEPT',
    title:'Aurelia Premium Design',
    text:'A premium visual web experience focused on luxury presentation, cinematic composition, refined typography and polished interaction. Built as a live portfolio demonstration.',
-   image:'',
-   demoUrl:'https://aureliapremium.netlify.app',
+   image:'', demoUrl:'https://aureliapremium.netlify.app',
    tags:['WEB DESIGN','UI/UX','MOTION','PREMIUM']
  },
+ nova:{
+   label:'02 — AUTOMOTIVE EXPERIENCE',
+   title:'Nova Motors',
+   text:'A premium performance-car dealership concept designed around inventory presentation, trust, private viewing enquiries and a high-end editorial visual system.',
+   image:'', demoUrl:'https://novamoters.netlify.app',
+   tags:['AUTOMOTIVE','WEB DESIGN','UI/UX','B2C']
+ },
+ helix:{
+   label:'03 — AI / CREATIVE TECHNOLOGY',
+   title:'HELIX',
+   text:'An experimental AI and biological-computing interface concept with interactive sequence controls, modular research sections and a speculative scientific visual language.',
+   image:'', demoUrl:'https://helixbiotech.netlify.app',
+   tags:['AI','INTERACTION','CREATIVE CODE','SCI-TECH']
+ },
  interactive:{
-   label:'02 — INTERACTIVE WEB EXPERIENCE',
+   label:'04 — INTERACTIVE WEB EXPERIENCE',
    title:'Interactive Portfolio',
    text:'An experimental interactive website exploring motion, particles, depth and responsive visual interaction. Built as a live demonstration of creative front-end work.',
-   image:'',
-   demoUrl:'https://portfoliodemointeractive.netlify.app',
+   image:'', demoUrl:'https://portfoliodemointeractive.netlify.app',
    tags:['INTERACTION','MOTION','WEB','CREATIVE CODE']
  },
  apex:{
-   label:'03 — AUTOMOTIVE WEB EXPERIENCE',
+   label:'05 — AUTOMOTIVE WEB CONCEPT',
    title:'Apex Motors',
    text:'A premium automotive website concept built around cinematic visuals, strong typography, immersive presentation and a performance-focused visual language.',
-   image:'',
-   demoUrl:'https://apexmoters.netlify.app',
+   image:'', demoUrl:'https://apexmoters.netlify.app',
    tags:['AUTOMOTIVE','WEB DESIGN','UI/UX','MOTION']
  },
+ sands:{
+   label:'06 — B2B BUSINESS WEBSITE',
+   title:'S&S Electrical & Plumbing',
+   text:'A responsive wholesale-supply website concept for an electrical and plumbing supplier in Puthuppally, Kottayam, designed around product discovery and quote enquiries.',
+   image:'', demoUrl:'https://sandsaccessories.netlify.app',
+   tags:['B2B','BUSINESS','RESPONSIVE','PRODUCTS']
+ },
+ women:{
+   label:'07 — E-COMMERCE CONCEPT',
+   title:'Lumière',
+   text:'A women’s fashion storefront concept with category-led navigation, product cards, shopping interactions and a polished fashion-editorial visual direction.',
+   image:'', demoUrl:'https://womenclothsdemo.netlify.app',
+   tags:['E-COMMERCE','FASHION','UI/UX','STORE']
+ },
+ men:{
+   label:'08 — E-COMMERCE CONCEPT',
+   title:'Norden',
+   text:'A men’s fashion storefront concept focused on clean merchandising, product discovery, editorial campaigns and a modern premium retail feel.',
+   image:'', demoUrl:'https://mensclothdemo.netlify.app',
+   tags:['E-COMMERCE','FASHION','UI/UX','STORE']
+ },
  king:{
-   label:'04 — WEBSITE REDESIGN CONCEPT',
+   label:'09 — WEBSITE REDESIGN CONCEPT',
    title:'King Leos Fitness',
-   text:'A visual redesign direction for a fitness center, combining bold typography, dark editorial layouts, gold accents and conversion-focused calls to action. This is a concept project created to demonstrate design and front-end execution.',
-   image:'assets/king-leos-concept.jpg',
-   demoUrl:'https://kingleosgym.netlify.app',
+   text:'A visual redesign direction for a fitness center, combining bold typography, dark editorial layouts, gold accents and conversion-focused calls to action.',
+   image:'assets/king-leos-concept.jpg', demoUrl:'https://kingleosgym.netlify.app',
    tags:['UI/UX','WEB DESIGN','FRONT-END','RESPONSIVE']
  }
 };
+
+
+/* V4 — project filtering */
+document.querySelectorAll('.filter').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter=btn.dataset.filter;
+    document.querySelectorAll('.project-grid .project').forEach(card=>{
+      const show=filter==='all'||card.dataset.category===filter;
+      card.classList.toggle('is-hidden',!show);
+    });
+  });
+});
 
 const modal=document.getElementById('modal');
 function openProject(key){
@@ -82,18 +145,25 @@ function openProject(key){
   document.getElementById('modalTitle').textContent=p.title;
   document.getElementById('modalText').textContent=p.text;
   const image=document.getElementById('modalImage');
-  const preview=document.getElementById('modalPreview');
-  const fallback=document.getElementById('modalFallback');
-  image.style.backgroundImage=p.image?`url("${p.image}")`:'';
+  image.style.backgroundImage=p.image ? `url("${p.image}")` : '';
   image.className='modal-image '+(!p.image?'no-image':'');
-  if(preview){
-    preview.src=p.demoUrl || '';
-    preview.classList.toggle('has-source',!!p.demoUrl);
-    preview.onload=()=>preview.classList.add('loaded');
-  }
-  if(fallback){
-    fallback.innerHTML=`<span>${p.title.toUpperCase()}</span>`;
-    fallback.style.backgroundImage=p.image?`url("${p.image}")`:'';
+  const modalPreview=document.getElementById('modalPreview');
+  const previewShell=document.getElementById('modalPreviewShell');
+  const previewLoading=previewShell?.querySelector('.modal-preview-loading');
+  if(modalPreview){
+    modalPreview.src='about:blank';
+    modalPreview.removeAttribute('src');
+    modalPreview.style.display=p.demoUrl?'block':'none';
+    if(previewLoading) previewLoading.style.display=p.demoUrl?'flex':'none';
+    if(p.demoUrl){
+      modalPreview.onload=()=>{ if(previewLoading) previewLoading.style.display='none'; };
+      modalPreview.onerror=()=>{ if(previewLoading) previewLoading.textContent='OPEN LIVE DEMO ↗'; };
+      requestAnimationFrame(()=>{ modalPreview.src=p.demoUrl; });
+      window.setTimeout(()=>{
+        if(modal.classList.contains('open') && previewLoading && previewLoading.style.display !== 'none')
+          previewLoading.textContent='PREVIEW LOADING — USE OPEN LIVE DEMO ↗';
+      },5000);
+    }
   }
   document.getElementById('modalTags').innerHTML=p.tags.map(t=>`<span>${t}</span>`).join('');
   const demo=document.getElementById('modalDemo');
@@ -389,3 +459,29 @@ document.querySelectorAll('.nav-center a').forEach(link=>link.addEventListener('
     sections.forEach(section => sectionObserver.observe(section));
   }
 })();
+
+// Performance: keep the real websites in the cards, but only mount a few iframes
+// near the viewport. This preserves the live-preview feel without making scroll heavy.
+const previewFrames = [...document.querySelectorAll('.live-preview-frame')];
+const previewObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    const frame=entry.target;
+    const screen=frame.closest('.browser-screen');
+    if(entry.isIntersecting){
+      if(!frame.src || frame.src==='about:blank'){
+        const url=frame.dataset.src;
+        if(url) frame.src=url;
+      }
+      frame.addEventListener('load',()=>screen?.classList.add('has-live-preview'),{once:true});
+    }else if(frame.src && frame.src!=='about:blank'){
+      // Keep the preview only while it is close enough to be useful.
+      const r=frame.getBoundingClientRect();
+      const near=r.top < window.innerHeight*2 && r.bottom > -window.innerHeight*2;
+      if(!near){
+        frame.removeAttribute('src');
+        screen?.classList.remove('has-live-preview');
+      }
+    }
+  });
+},{rootMargin:'300px 0px', threshold:0.01});
+previewFrames.forEach(frame=>previewObserver.observe(frame));

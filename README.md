@@ -87,3 +87,33 @@ Added without external animation libraries:
 - Reduced-motion accessibility support.
 
 The existing portfolio content, project modal, live-demo buttons, mobile navigation, and contact links are preserved.
+
+
+## V4 — Portfolio expansion
+
+The portfolio was expanded to nine live demo projects:
+- Aurelia Premium Design
+- Nova Motors
+- HELIX
+- Interactive Portfolio
+- Apex Motors
+- S&S Electrical & Plumbing
+- Lumière Women's Fashion
+- Norden Men's Fashion
+- King Leos Fitness
+
+The work section now includes category filters for Business, E-commerce and Creative projects, plus mobile-first spacing and touch-friendly controls.
+
+The new live demos are:
+- https://helixbiotech.netlify.app
+- https://novamoters.netlify.app
+- https://womenclothsdemo.netlify.app
+- https://mensclothdemo.netlify.app
+- https://sandsaccessories.netlify.app
+
+
+## V8 — Optimized live previews
+- Project cards use the real live demo sites, but iframes are mounted only near the viewport to reduce scroll lag.
+- Off-screen previews are unloaded when they are far away, reducing memory and CPU usage.
+- Case-study modal now contains a real live preview instead of an empty image panel.
+- Live Demo buttons still open each project directly in a new tab.
